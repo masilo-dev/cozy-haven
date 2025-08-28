@@ -1,0 +1,44 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://cozyhaven.co.uk
+
+# Sitemaps
+Sitemap: https://cozyhaven.co.uk/sitemap.xml
+
+# Specific pages
+Allow: /properties
+Allow: /about
+Allow: /contact
+Allow: /property/*
+
+# Disallow admin and user areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /api/
+
+# Disallow search parameters
+Disallow: /*?*
+
+# Allow specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Crawl delay for general bots
+Crawl-delay: 1
+
+# Block problematic bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
