@@ -1,3 +1,6 @@
+
+'use client'
+
 import Link from 'next/link'
 import { Home, ArrowLeft } from 'lucide-react'
 

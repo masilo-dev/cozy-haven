@@ -121,6 +121,7 @@ export default function Header() {
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center space-x-4">
             <button 
+              onClick={() => { /* handle search */ }}
               className="p-2 text-gray-700 hover:text-red-500 transition-colors rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               aria-label="Search properties"
             >
