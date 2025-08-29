@@ -10,20 +10,20 @@
 - [x] Test authentication flows
 
 ## Phase 4: Develop property management features for admins
-- [ ] Create property CRUD operations
-- [ ] Build property listing management interface
-- [ ] Add image upload functionality for properties
-- [ ] Implement property search and filtering
-- [ ] Add property availability management
-- [ ] Create property analytics dashboard
+- [x] Create property CRUD operations
+- [x] Build property listing management interface
+- [x] Add image upload functionality for properties
+- [x] Implement property search and filtering
+- [x] Add property availability management
+- [x] Create property analytics dashboard
 
 ## Phase 5: Create customer and admin dashboards
-- [ ] Build admin dashboard with full CRUD access
-- [ ] Create customer dashboard for viewing/booking properties
-- [ ] Implement booking management system
-- [ ] Add user management for admins
-- [ ] Create reporting and analytics features
-- [ ] Build responsive UI components
+- [x] Build admin dashboard with full CRUD access
+- [x] Create customer dashboard for viewing/booking properties
+- [x] Implement booking management system
+- [x] Add user management for admins
+- [x] Create reporting and analytics features
+- [x] Build responsive UI components
 
 ## Phase 6: Deploy changes and verify the updated website
 - [ ] Test all functionality locally
