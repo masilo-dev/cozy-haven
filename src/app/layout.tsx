@@ -4,6 +4,7 @@ import './globals.css'
 import Header from '@/components/layout/Header'
 import { Suspense } from 'react'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { AuthProvider } from '@/lib/auth-context'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -140,23 +141,25 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://images.pexels.com" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <a 
-          href="#main-content" 
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-red-500 text-white px-4 py-2 rounded-lg z-50"
-        >
-          Skip to main content
-        </a>
-        <Suspense fallback={<LoadingSpinner />}>
-          <Header />
-        </Suspense>
-        <main id="main-content" role="main">
-          {children}
-        </main>
-        <noscript>
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-            This website requires JavaScript to function properly. Please enable JavaScript in your browser.
-          </div>
-        </noscript>
+        <AuthProvider>
+          <a 
+            href="#main-content" 
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-red-500 text-white px-4 py-2 rounded-lg z-50"
+          >
+            Skip to main content
+          </a>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Header />
+          </Suspense>
+          <main id="main-content" role="main">
+            {children}
+          </main>
+          <noscript>
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              This website requires JavaScript to function properly. Please enable JavaScript in your browser.
+            </div>
+          </noscript>
+        </AuthProvider>
       </body>
     </html>
   )

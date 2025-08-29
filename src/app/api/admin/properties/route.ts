@@ -29,9 +29,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
-    const { data: properties, error } = await supabase
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const type = searchParams.get('type') || ''
+    const status = searchParams.get('status') || ''
+
+    let query = supabase
       .from('properties')
-      .select('*')
+      .select('*', { count: 'exact' })
+
+    // Apply filters
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,location.ilike.%${search}%,description.ilike.%${search}%`)
+    }
+
+    if (type) {
+      query = query.eq('type', type)
+    }
+
+    if (status === 'available') {
+      query = query.eq('available', true)
+    } else if (status === 'unavailable') {
+      query = query.eq('available', false)
+    }
+
+    // Apply pagination
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    const { data: properties, error, count } = await query
+      .range(from, to)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -42,7 +71,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ properties })
+    return NextResponse.json({
+      properties,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
+    })
   } catch (error) {
     console.error('Admin properties GET error:', error)
     return NextResponse.json(
@@ -59,7 +96,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
-    const propertyData = await request.json()
+    const body = await request.json()
+    
+    const {
+      title,
+      description,
+      location,
+      price,
+      price_type = 'night',
+      bedrooms,
+      bathrooms,
+      guests,
+      images = [],
+      amenities = [],
+      type = 'short-term',
+      available = true,
+      featured = false,
+      airbnb_listing_id,
+      latitude,
+      longitude
+    } = body
+
+    // Validate required fields
+    if (!title || !description || !location || !price || !bedrooms || !bathrooms || !guests) {
+      return NextResponse.json(
+        { error: 'Missing required fields: title, description, location, price, bedrooms, bathrooms, guests' },
+        { status: 400 }
+      )
+    }
+
+    const propertyData = {
+      title,
+      description,
+      location,
+      price: parseFloat(price),
+      price_type,
+      bedrooms: parseInt(bedrooms),
+      bathrooms: parseFloat(bathrooms),
+      guests: parseInt(guests),
+      rating: 0,
+      review_count: 0,
+      images,
+      amenities,
+      type,
+      available,
+      featured,
+      airbnb_listing_id,
+      latitude: latitude ? parseFloat(latitude) : null,
+      longitude: longitude ? parseFloat(longitude) : null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
 
     const { data: property, error } = await supabase
       .from('properties')
@@ -75,7 +162,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ property })
+    return NextResponse.json({ property }, { status: 201 })
   } catch (error) {
     console.error('Admin properties POST error:', error)
     return NextResponse.json(
@@ -92,11 +179,29 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
     }
 
-    const { id, ...propertyData } = await request.json()
+    const { id, ...updateData } = await request.json()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Property ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Add updated timestamp
+    updateData.updated_at = new Date().toISOString()
+
+    // Convert numeric fields if they exist
+    if (updateData.price) updateData.price = parseFloat(updateData.price)
+    if (updateData.bedrooms) updateData.bedrooms = parseInt(updateData.bedrooms)
+    if (updateData.bathrooms) updateData.bathrooms = parseFloat(updateData.bathrooms)
+    if (updateData.guests) updateData.guests = parseInt(updateData.guests)
+    if (updateData.latitude) updateData.latitude = parseFloat(updateData.latitude)
+    if (updateData.longitude) updateData.longitude = parseFloat(updateData.longitude)
 
     const { data: property, error } = await supabase
       .from('properties')
-      .update(propertyData)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
@@ -106,6 +211,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { error: 'Failed to update property' },
         { status: 500 }
+      )
+    }
+
+    if (!property) {
+      return NextResponse.json(
+        { error: 'Property not found' },
+        { status: 404 }
       )
     }
 
@@ -136,6 +248,21 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // First check if property exists
+    const { data: existingProperty, error: fetchError } = await supabase
+      .from('properties')
+      .select('id, title')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !existingProperty) {
+      return NextResponse.json(
+        { error: 'Property not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete the property
     const { error } = await supabase
       .from('properties')
       .delete()
@@ -149,7 +276,10 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ message: 'Property deleted successfully' })
+    return NextResponse.json({ 
+      message: 'Property deleted successfully',
+      deletedProperty: existingProperty
+    })
   } catch (error) {
     console.error('Admin properties DELETE error:', error)
     return NextResponse.json(
